@@ -21,7 +21,6 @@ app.get('/', async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Welcome to the API for the Lopez Urban Farm Evergreen Project',
-    plants: await Plant.find({}, 'name species description image').limit(5)
   })
 })
 
