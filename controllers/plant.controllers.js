@@ -9,7 +9,7 @@ export const GetPlantsController = async (req, res) => {
         })
     }
     catch(err){
-        return res.status(500).json({ success: false, message: 'Server Error' })
+        return res.status(500).json({ success: false, message: 'Server Error', error: err })
     }
 }
 export const GetPlantController = async (req, res) => {
