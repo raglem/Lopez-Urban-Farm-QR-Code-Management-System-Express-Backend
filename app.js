@@ -5,7 +5,6 @@ import express from 'express'
 import connectDB from './config/connectDB.js'
 import userRouter from './routes/user.routes.js'
 import plantRouter from './routes/plant.routes.js'
-import Plant from './models/plant.models.js'
 
 dotenv.config()
 
@@ -18,13 +17,23 @@ app.use('/users', userRouter)
 app.use('/plants', plantRouter)
 
 app.get('/', async (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: 'Welcome to the API for the Lopez Urban Farm Evergreen Project',
   })
 })
 
-app.listen(port, async () => {
-  await connectDB()
-  console.log(`Server listening on port ${port}`)
-})
+const startServer = async () => {
+  try {
+      await connectDB()
+      console.log('Connected to MongoDB')
+      app.listen(port, () => {
+          console.log(`Server is running at http://localhost:${port}`)
+      })
+  } catch (err) {
+      console.error('Failed to connect to DB', err)
+      process.exit(1)
+  }
+}
+
+startServer()
