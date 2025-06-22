@@ -5,6 +5,7 @@ import express from 'express'
 import connectDB from './config/connectDB.js'
 import userRouter from './routes/user.routes.js'
 import plantRouter from './routes/plant.routes.js'
+import Plant from './models/plant.models.js'
 
 dotenv.config()
 
@@ -16,10 +17,11 @@ app.use(express.json())
 app.use('/users', userRouter)
 app.use('/plants', plantRouter)
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Welcome to the API for the Lopez Urban Farm Evergreen Project',
+    plants: await Plant.find({}, 'name species description image').limit(5)
   })
 })
 
