@@ -16,6 +16,13 @@ app.use(express.json())
 app.use('/users', userRouter)
 app.use('/plants', plantRouter)
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Welcome to the API for the Lopez Urban Farm Evergreen Project',
+  })
+})
+
 app.listen(port, () => {
   connectDB()
   console.log(`Server listening on port ${port}`)
