@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "version": "0.0.0",
+  "main": "app.js",
   "type": "module",
   "private": true,
   "scripts": {
