@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
   })
 })
 
-app.listen(port, () => {
-  connectDB()
+app.listen(port, async () => {
+  await connectDB()
   console.log(`Server listening on port ${port}`)
 })
