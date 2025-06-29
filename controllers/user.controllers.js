@@ -15,7 +15,16 @@ export const LoginController = async (req, res) => {
         if(!passwordMatch)    return res.status(401).json({ success: false, message: `User with ${username} not found with matching password`})
 
         const token = jwt.sign( {userId: user._id}, process.env.SECRET_KEY, {expiresIn: '1h'} )
-        return res.status(201).json({ success: 'true', message: 'User authentication successful', token: token })
+        return res.status(201).json({ 
+            success: 'true', 
+            message: 'User authentication successful', 
+            token: token,
+            user: {
+                _id: user._id,
+                username: user.username,
+                role: user.role, 
+            }
+        })
     }
     catch(err){
         console.log(err)
@@ -49,10 +58,10 @@ export const AddUserController = async (req, res) => {
         return res.status(200).json({ 
             success: false, 
             message: `Account with ${username} successfully created`, 
-            data: {
+            user: {
                 username: newUser.username,
                 role: newUser.role,
-                id: newUser._id
+                _id: newUser._id
             } 
         })
     }
@@ -65,7 +74,7 @@ export const AddUserController = async (req, res) => {
 export const RemoveUserController = async (req, res) => {
     try{
         // Verify all required fields
-        const userToRemoveId = req.body.user
+        const userToRemoveId = req.params._id
         if(!userToRemoveId)   return res.status(400).json({ success: false, message: 'Specified user must be provided'})
         
         // Retrieve user to remove
@@ -91,7 +100,7 @@ export const RemoveUserController = async (req, res) => {
 export const EditRoleController = async (req, res) => {
     try{
         // Verify request body has all required fields
-        const userToEditId = req.body.user
+        const userToEditId = req.params._id
         const { role } = req.body
         if(!userToEditId || !role)   return res.status(400).json({ success: false, message: 'Specified user and assigned role must be provided'})
         if(role !== 'Owner' && role !== 'Staff')  return res.status(400).json({ success: false, message: 'Role must be either Owner or Staff'})
@@ -113,6 +122,58 @@ export const EditRoleController = async (req, res) => {
         return res.status(200).json({ success: true, message: `${userToEdit.username} role updated to ${role}`})
     }
     catch(err){
+        return res.status(500).json({ success: false, message: 'Server Error' })
+    }
+}
+
+export const EditUserController = async (req, res) => {
+    try{
+        const id = req.params._id
+        if(!id) return res.status(400).json({ success: false, message: 'User id must be provided'})
+
+        const user = await User.findById(id)
+        if(!user) return res.status(404).json({ success: false, message: 'User not found'})
+
+        const { username, role } = req.body
+        if(!username || !role) return res.status(400).json({ success: false, message: 'Username and role fields must both be provided'})
+        if(role !== 'Owner' && role !== 'Staff') return res.status(400).json({ success: false, message: 'Role must be either Owner or Staff'})
+        if(user.role === 'Staff' && role !== 'Owner') return res.status(400).json({ success: false, message: 'Only Owners can assign roles'})
+        if(role === 'Owner' && await User.find({ role: 'Owner', _id: { $ne: id } }).countDocuments() === 0) return res.status(400).json({ success: false, message: 'There must be at least one Owner'}) 
+        
+        user.username = username
+        user.role = role
+        await user.save()
+        return res.status(200).json({ success: true, message: `User ${username} successfully updated with role ${role}` })
+    }
+    catch(err){
+        console.log(err)
+        return res.status(500).json({ success: false, message: 'Server Error' })
+    }
+}
+
+export const ResetPasswordController = async (req, res) => {
+    try{
+        const id = req.params._id
+        if(!id) return res.status(400).json({ success: false, message: 'User id must be provided'})
+
+        const user = await User.findById(id)
+        if(!user) return res.status(404).json({ success: false, message: 'User not found'})
+
+        const { oldPassword, newPassword } = req.body
+        if(!oldPassword || !newPassword) return res.status(400).json({ success: false, message: 'Old and new password fields must both be provided'})
+
+        if(oldPassword === newPassword) return res.status(400).json({ success: false, message: 'New password must be different from old password'})
+
+        const passwordMatch = await bcrypt.compare(oldPassword, user.password)
+        if(!passwordMatch) return res.status(401).json({ success: false, message: 'Old password is incorrect'})
+
+        user.password = await bcrypt.hash(newPassword, 10)
+        await user.save()
+
+        return res.status(200).json({ success: true, message: 'Password successfully updated' })
+    }
+    catch(err){
+        console.log(err)
         return res.status(500).json({ success: false, message: 'Server Error' })
     }
 }
