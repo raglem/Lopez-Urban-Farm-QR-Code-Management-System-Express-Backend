@@ -5,6 +5,7 @@ import express from 'express'
 import connectDB from './config/connectDB.js'
 import userRouter from './routes/user.routes.js'
 import plantRouter from './routes/plant.routes.js'
+import quizRouter from './routes/quiz.routes.js'
 
 dotenv.config()
 
@@ -15,6 +16,7 @@ app.use(cors())
 app.use(express.json())
 app.use('/users', userRouter)
 app.use('/plants', plantRouter)
+app.use('/quiz', quizRouter)
 
 app.get('/', async (req, res) => {
   return res.status(200).json({
