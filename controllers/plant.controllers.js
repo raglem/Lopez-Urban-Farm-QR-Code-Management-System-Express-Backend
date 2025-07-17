@@ -25,7 +25,7 @@ export const GetPlantController = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Plant id is required' });
         }
         const plant = await Plant.findById(id);
-        if (!plant) {
+        if (!plant || (plant.visibility === false && !(await isAuthenticated()))) {
             return res.status(404).json({ success: false, message: 'Plant not found' });
         }
         return res.status(200).json({
