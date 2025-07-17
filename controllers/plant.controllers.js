@@ -1,8 +1,12 @@
 import Plant from '../models/plant.models.js'
 import cloudinary from '../utils/cloudinary.js'
+import isAuthenticated from '../utils/isAuthenticated.js'
 export const GetPlantsController = async (req, res) => {
     try{
-        const plants = await Plant.find()
+        let plants = await Plant.find()
+        if(!(await isAuthenticated(req))){
+            plants = plants.filter(p => p.visibility === true)
+        }
         return res.status(200).json({
             success: true,
             message: 'Plants successfully retrieved',
@@ -37,8 +41,8 @@ export const GetPlantController = async (req, res) => {
 export const AddPlantController = async (req, res) => {
     try{
         // Check if all required fields are present in the request body
-        const { name, species, description } = req.body
-        if(!name || !species || !description){
+        const { name, species, description, visibility } = req.body
+        if(!name || !species || !description || !visibility){
             return res.status(400).json({ success: false, message: 'All fields are required'})
         }
         if(await Plant.findOne({ name })){
@@ -47,7 +51,7 @@ export const AddPlantController = async (req, res) => {
 
         // Create a new plant document
         const plant = new Plant({
-            name, species, description
+            name, species, description, visibility
         })
 
         // Handle image upload if it exists
@@ -78,7 +82,7 @@ export const AddPlantController = async (req, res) => {
 export const UpdatePlantController = async (req, res) => {
     try{
         // Define fields that can be updated and check if the id is present in the request body
-        const fields = ['name', 'species', 'description']
+        const fields = ['name', 'species', 'description', 'visibility']
         const { id } = req.body
         if(!id){
             return res.status(400).json({ success: false, message: 'Plant id field is required'})
