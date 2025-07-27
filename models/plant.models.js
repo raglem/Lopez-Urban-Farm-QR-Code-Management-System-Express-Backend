@@ -15,6 +15,10 @@ const plantSchema = new Schema({
         type: String,
         required: true,
     },
+    visibility: {
+        type: Boolean,
+        required: true,
+    },
     // nested field for metadata of image stored in Cloudinary
     image: {
         type: {
