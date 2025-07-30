@@ -1,9 +1,10 @@
+import Garden from '../models/garden.models.js'
 import Plant from '../models/plant.models.js'
 import cloudinary from '../utils/cloudinary.js'
 import isAuthenticated from '../utils/isAuthenticated.js'
 export const GetPlantsController = async (req, res) => {
     try{
-        let plants = await Plant.find()
+        let plants = await Plant.find().populate('garden')
         if(!(await isAuthenticated(req))){
             plants = plants.filter(p => p.visibility === true)
         }
@@ -24,7 +25,7 @@ export const GetPlantController = async (req, res) => {
         if (!id) {
             return res.status(400).json({ success: false, message: 'Plant id is required' });
         }
-        const plant = await Plant.findById(id);
+        const plant = await Plant.findById(id).populate('garden');
         if (!plant || (plant.visibility === false && !(await isAuthenticated()))) {
             return res.status(404).json({ success: false, message: 'Plant not found' });
         }
@@ -54,6 +55,17 @@ export const AddPlantController = async (req, res) => {
             name, species, description, visibility
         })
 
+        // Check if the garden id is provided and exists in the database
+        // Append it to the new plant document if it exists
+        const { gardenId } = req.body
+        if(gardenId){
+            const retrievedGarden = await Garden.findById({ _id: gardenId })
+            if(!retrievedGarden){
+                return res.status(404).json({ success: false, message: 'Garden not found' })
+            }
+            plant.garden = retrievedGarden._id
+        }
+
         // Handle image upload if it exists
         if(req.file){
             const image = await cloudinary.uploader.upload(req.file.path);
@@ -82,7 +94,7 @@ export const AddPlantController = async (req, res) => {
 export const UpdatePlantController = async (req, res) => {
     try{
         // Define fields that can be updated and check if the id is present in the request body
-        const fields = ['name', 'species', 'description', 'visibility']
+        const fields = ['name', 'species', 'description', 'garden', 'visibility']
         const { id } = req.body
         if(!id){
             return res.status(400).json({ success: false, message: 'Plant id field is required'})

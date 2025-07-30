@@ -19,6 +19,11 @@ const plantSchema = new Schema({
         type: Boolean,
         required: true,
     },
+    garden: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Garden',
+        required: false,
+    },
     // nested field for metadata of image stored in Cloudinary
     image: {
         type: {
