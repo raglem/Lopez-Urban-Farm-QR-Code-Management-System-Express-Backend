@@ -13,13 +13,13 @@ const gardenSchema = mongoose.Schema({
         type: Boolean,
         required: true,
     },
-    image: {
+    images: [{
         type: {
             url: { type: String, required: true },
             public_id: { type: String, required: true }
         },
         required: false,
-    }
+    }],
 })
 
 const Garden = mongoose.model('Garden', gardenSchema)
