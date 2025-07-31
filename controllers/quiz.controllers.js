@@ -8,12 +8,12 @@ export const GetQuizController = async (req, res) => {
         const numOfQuestions = 12
         // Fetch plants with images
         const plantsWithImages = await Plant.aggregate([
-            { $match: { image: { $exists: true, $ne: null } } },
+            { $match: { visibility: true, image: { $exists: true, $ne: null } } },
             { $sample: { size: numOfQuestions / 4 } }
         ]);
         // Fetch other plants without images, get more if there are not enough plants with images
         const otherPlants = await Plant.aggregate([
-            { $match: { _id: { $nin: plantsWithImages.map(plant => plant._id) } } },
+            { $match: { visibility: true, _id: { $nin: plantsWithImages.map(plant => plant._id) } } },
             { $sample: { size: 2 * (numOfQuestions / 4) - plantsWithImages.length } }
         ]);
         const plants = [...plantsWithImages, ...otherPlants]

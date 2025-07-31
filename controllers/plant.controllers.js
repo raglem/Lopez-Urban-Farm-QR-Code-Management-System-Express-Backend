@@ -1,11 +1,11 @@
 import Garden from '../models/garden.models.js'
 import Plant from '../models/plant.models.js'
 import cloudinary from '../utils/cloudinary.js'
-import isAuthenticated from '../utils/isAuthenticated.js'
+
 export const GetPlantsController = async (req, res) => {
     try{
         let plants = await Plant.find().populate('garden')
-        if(!(await isAuthenticated(req))){
+        if(req.isAuthenticated === false){
             plants = plants.filter(p => p.visibility === true)
         }
         return res.status(200).json({
@@ -16,7 +16,7 @@ export const GetPlantsController = async (req, res) => {
     }
     catch(err){
         console.log(err)
-        return res.status(500).json({ success: false, message: 'Server Error', error: err })
+        return res.status(500).json({ success: false, message: 'Server Error'})
     }
 }
 export const GetPlantController = async (req, res) => {
@@ -26,7 +26,7 @@ export const GetPlantController = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Plant id is required' });
         }
         const plant = await Plant.findById(id).populate('garden');
-        if (!plant || (plant.visibility === false && !(await isAuthenticated()))) {
+        if (!plant || (plant.visibility === false && req.isAuthenticated === false)) {
             return res.status(404).json({ success: false, message: 'Plant not found' });
         }
         return res.status(200).json({
@@ -36,6 +36,7 @@ export const GetPlantController = async (req, res) => {
         })
     }
     catch(err){
+        console.error(err)
         return res.status(500).json({ success: false, message: 'Server Error' })
     }
 }

@@ -1,12 +1,11 @@
 import Garden from "../models/garden.models.js";
 import Plant from "../models/plant.models.js";
-import isAuthenticated from "../utils/isAuthenticated.js";
 import cloudinary from "../utils/cloudinary.js";
 
 export const GetGardensController = async (req, res) => {
     try{
         let gardens = await Garden.find()
-        if(!(await isAuthenticated(req))){
+        if(req.isAuthenticated === falsereq.isAuthenticated === false){
             gardens = gardens.filter(g => g.visibility === true)
         }
         return res.status(200).json({
@@ -17,7 +16,7 @@ export const GetGardensController = async (req, res) => {
     }
     catch(err){
         console.log(err)
-        return res.status(500).json({ success: false, message: 'Server Error', error: err })
+        return res.status(500).json({ success: false, message: 'Server Error' })
     }
 }
 export const GetGardenController = async (req, res) => {
@@ -27,7 +26,7 @@ export const GetGardenController = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Garden id is required' });
         }
         const garden = await Garden.findById(id);
-        if (!garden || (garden.visibility === false && !(await isAuthenticated()))) {
+        if (!garden || (garden.visibility === false && req.isAuthenticated === false)) {
             return res.status(404).json({ success: false, message: 'Garden not found' });
         }
 
@@ -44,6 +43,34 @@ export const GetGardenController = async (req, res) => {
     }
     catch(err){
         console.error(err)
+        return res.status(500).json({ success: false, message: 'Server Error' })
+    }
+}
+export const GetGardensFullController = async (req, res) => {
+    try{
+        let gardens = await Garden.find()
+        if(req.isAuthenticated === false){
+            gardens = gardens.filter(g => g.visibility === true)
+        }
+        gardens = await Promise.all(gardens.map(async (garden) => {
+            // Populate the plants for each garden and filter based on authentication status
+            let plants = await Plant.find({ garden: garden._id }).select('-garden')
+            if(req.isAuthenticated === false){
+                plants = plants.filter(p => p.visibility === true)
+            }
+            return {
+                ...garden.toObject(),
+                plants
+            }
+        }))
+        return res.status(200).json({
+            success: true,
+            message: 'Gardens successfully retrieved',
+            data: gardens,
+        })
+    }
+    catch(err){
+        console.log(err)
         return res.status(500).json({ success: false, message: 'Server Error' })
     }
 }
@@ -80,19 +107,25 @@ export const UpdateGardenController = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Garden id is required' });
     }
 
-    const garden = await Garden.findById(id)
-    if (!garden) {
-        return res.status(404).json({ success: false, message: 'Garden not found' });
-    }
-
-    const fields = ['name', 'description']
-    for(const field of fields){
-        if(req.body[field]){
-            garden[field] = req.body[field]
+    try{
+        const garden = await Garden.findById(id)
+        if (!garden) {
+            return res.status(404).json({ success: false, message: 'Garden not found' });
         }
+    
+        const fields = ['name', 'description']
+        for(const field of fields){
+            if(req.body[field]){
+                console.log(`Updating field ${field} with value: ${req.body[field]}`)
+                garden[field] = req.body[field]
+            }
+        }
+        await garden.save()
+        return res.status(200).json({ success: true, message: 'Garden successfully updated', data: garden });
     }
-    await garden.save()
-    return res.status(200).json({ success: true, message: 'Garden successfully updated', data: garden });
+    catch(err){
+        return res.status(500).json({ success: false, message: 'Server Error' })
+    }
 }
 export const AddGardenImage = async (req, res) => {
     const { id } = req.params
@@ -188,7 +221,7 @@ export const DeleteGardenController = async (req, res) => {
             await cloudinary.uploader.destroy(image.public_id);
         }
 
-        await garden.remove();
+        await Garden.deleteOne({ _id: id})
 
         return res.status(204).json({ success: true, message: 'Garden successfully deleted' });
     } catch (error) {
