@@ -2,9 +2,11 @@ import verifyToken from "../middleware/verifyToken.js"
 import { Router } from "express"
 import { GetPlantController, GetPlantsController, AddPlantController, UpdatePlantController, RemovePlantController } from "../controllers/plant.controllers.js"
 import upload from "../middleware/multer.js"
+import attachAuth from "../middleware/attachAuth.js"
 
 const plantRouter = Router()
 
+plantRouter.use(attachAuth)
 plantRouter.get('/:id', GetPlantController)
 plantRouter.get('/', GetPlantsController)
 
