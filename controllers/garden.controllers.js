@@ -5,7 +5,7 @@ import cloudinary from "../utils/cloudinary.js";
 export const GetGardensController = async (req, res) => {
     try{
         let gardens = await Garden.find()
-        if(req.isAuthenticated === falsereq.isAuthenticated === false){
+        if(req.isAuthenticated === false){
             gardens = gardens.filter(g => g.visibility === true)
         }
         return res.status(200).json({
