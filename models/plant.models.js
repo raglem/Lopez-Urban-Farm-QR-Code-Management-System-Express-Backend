@@ -32,6 +32,10 @@ const plantSchema = new Schema({
         },
         required: false
     },
+    season: {
+        type: String,
+        enum: ['Spring', 'Summer', 'Fall', 'Winter']
+    }
 })
 
 const Plant = mongoose.model('Plant', plantSchema)
