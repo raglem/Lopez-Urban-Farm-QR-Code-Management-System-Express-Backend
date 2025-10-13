@@ -43,8 +43,8 @@ export const GetPlantController = async (req, res) => {
 export const AddPlantController = async (req, res) => {
     try{
         // Check if all required fields are present in the request body
-        const { name, species, description, visibility } = req.body
-        if(!name || !species || !description || !visibility){
+        const { name, species, description, season, visibility } = req.body
+        if(!name || !species || !description || !season || !visibility){
             return res.status(400).json({ success: false, message: 'All fields are required'})
         }
         if(await Plant.findOne({ name })){
@@ -53,7 +53,7 @@ export const AddPlantController = async (req, res) => {
 
         // Create a new plant document
         const plant = new Plant({
-            name, species, description, visibility
+            name, species, description, season, visibility
         })
 
         // Check if the garden id is provided and exists in the database
@@ -95,7 +95,7 @@ export const AddPlantController = async (req, res) => {
 export const UpdatePlantController = async (req, res) => {
     try{
         // Define fields that can be updated and check if the id is present in the request body
-        const fields = ['name', 'species', 'description', 'garden', 'visibility']
+        const fields = ['name', 'species', 'description', 'season', 'garden', 'visibility']
         const { id } = req.body
         if(!id){
             return res.status(400).json({ success: false, message: 'Plant id field is required'})
